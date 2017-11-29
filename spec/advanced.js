@@ -39,6 +39,14 @@
         expect(upperCasedStrings).to.eql(['DOG', 'CAT']);
       });
     });
+    
+    describe('invoke, when no methods or function is provided', function() {
+      it('returns the original collection unmodified', function() {
+        var original = _.invoke(['dog', 'cat']);
+
+        expect(original).to.eql(['dog', 'cat']);
+      });
+    });
 
     describe('sortBy', function() {
 

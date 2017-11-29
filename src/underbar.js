@@ -134,8 +134,7 @@
     // like each(), but in addition to running the operation on all
     // the members, it also maintains an array of results.
     var result = [];
-    
-    debugger;
+
     _.each(collection, function(value) {
       result.push(iterator(value));
     });
@@ -220,12 +219,20 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    iterator = iterator || _.identity;
+    return _.reduce(collection, function(memo, val) {
+      return memo && !!iterator(val);
+    }, true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    iterator = iterator || _.identity;
+    return !_.every(collection, function(value) {
+      return !iterator(value);
+    });
   };
 
 
@@ -248,11 +255,29 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    var args = Array.prototype.slice.call(arguments);
+    var extended = args[0];
+    for(var i = 1; i < args.length; i++) {
+      _.each(args[i], function(value, key, collection) {
+        extended[key] = value;
+      });
+    }
+    return extended;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    var args = Array.prototype.slice.call(arguments);
+    var extended = args[0];
+    for(var i = 1; i < args.length; i++) {
+      _.each(args[i], function(value, key, collection) {
+        if (extended[key] === undefined) {
+          extended[key] = value;
+        }
+      });
+    }
+    return extended;
   };
 
 
@@ -296,6 +321,17 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var results = {};
+
+    return function() {
+      var args = JSON.stringify(Array.prototype.slice.call(arguments));
+
+      if (results[args] === undefined) {
+        results[args] = func.apply(this, arguments);
+      }
+      
+      return results[args];
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -305,6 +341,10 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    return setInterval(function() {
+      return func.apply(this, args);
+    }, wait);
   };
 
 
@@ -319,6 +359,22 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var shuffledArray = array.slice();
+    
+    var getRandomInt = function(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min)) + min;
+    };
+
+    for (var i = 0; i < shuffledArray.length; i++) {
+      var randomIndex = getRandomInt(i, shuffledArray.length);
+      var temp = shuffledArray[randomIndex];
+      shuffledArray[randomIndex] = shuffledArray[i];
+      shuffledArray[i] = temp; 
+    }
+    
+    return shuffledArray;
   };
 
 
@@ -333,6 +389,21 @@
   // Calls the method named by functionOrKey on each value in the list.
   // Note: You will need to learn a bit about .apply to complete this.
   _.invoke = function(collection, functionOrKey, args) {
+    var result = [];
+
+    var argsToInvoke = Array.prototype.slice.call(arguments, 2);
+
+    
+    _.each(collection, function(value, key) {
+      if (typeof(functionOrKey) === 'function') {
+        result.push(functionOrKey.apply(value, argsToInvoke));
+      } else if (typeof(functionOrKey) === 'string') {
+        debugger;
+        result.push(value[functionOrKey]()); 
+      }
+    });
+    
+    return result;
   };
 
   // Sort the object's values by a criterion produced by an iterator.
